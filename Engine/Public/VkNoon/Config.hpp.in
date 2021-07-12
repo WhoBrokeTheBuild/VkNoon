@@ -1,0 +1,36 @@
+#ifndef VKNOON_CONFIG_HPP
+#define VKNOON_CONFIG_HPP
+
+#include <VkNoon/Platform.hpp>
+
+#define VKNOON_VERSION_MAJOR @PROJECT_VERSION_MAJOR@
+#define VKNOON_VERSION_MINOR @PROJECT_VERSION_MINOR@
+#define VKNOON_VERSION_PATCH @PROJECT_VERSION_PATCH@
+
+#define VKNOON_REVISION "@PROJECT_VERSION_GIT_HASH@"
+
+#define VKNOON_VERSION_NUMBER(MAJOR, MINOR, PATCH) \
+    (((MAJOR << 16) | (MINOR << 8) | PATCH))
+
+#define VKNOON_VERSION \
+    VKNOON_VERSION_NUMBER(VKNOON_VERSION_MAJOR, VKNOON_VERSION_MINOR, VKNOON_VERSION_PATCH)
+
+#define VKNOON_VERSION_STRING "@PROJECT_VERSION@-@PROJECT_VERSION_GIT_HASH@"
+
+#if VKNOON_COMPILER_MSVC
+    #define VKNOON_API_EXPORT __declspec(dllexport)
+    #define VKNOON_API_IMPORT __declspec(dllimport)
+#else
+    #if VKNOON_COMPILER_GCC >= 4 || VKNOON_COMPILER_CLANG
+        #define VKNOON_API_EXPORT __attribute__ ((__visibility__ ("default")))
+        #define VKNOON_API_IMPORT __attribute__ ((__visibility__ ("default")))
+    #endif
+#endif
+
+#if defined(VKNOON_EXPORT)
+    #define VKNOON_API VKNOON_API_EXPORT
+#else
+    #define VKNOON_API VKNOON_API_IMPORT
+#endif
+
+#endif // VKNOON_CONFIG_HPP
