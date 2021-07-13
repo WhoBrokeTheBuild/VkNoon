@@ -1,5 +1,5 @@
 
-SET(_target VkNoon)
+SET(_target Noon)
 
 ###
 ### Source Files
@@ -82,7 +82,7 @@ SET_TARGET_PROPERTIES(
         CXX_STANDARD 20
         CXX_STANDARD_REQUIRED ON
         CXX_EXTENSIONS OFF
-        DEFINE_SYMBOL "VKNOON_EXPORT"
+        DEFINE_SYMBOL "NOON_EXPORT"
 )
 
 TARGET_COMPILE_OPTIONS(

@@ -1,21 +1,60 @@
 #!/usr/bin/env python3
 
 import os
-import sys
 import json
-import pathlib
+import argparse
 
 isWindows = (os.name == 'nt')
 
-executable = sys.argv[1]    # Path to executable
-sourceDir = sys.argv[2]     # CMAKE_CURRENT_SOURCE_DIR
-assetPath = sys.argv[3]     # Asset search path, separated by ';'
-runtimePath = sys.argv[4]   # Runtime search path, separated by ';'
+parser = argparse.ArgumentParser()
 
-name = pathlib.Path(executable).stem
+parser.add_argument(
+    '--name',
+    required=True,
+    help='Name of the launch target to generate.'
+)
 
-assetPath = assetPath.replace(';', os.pathsep)
-runtimePath = runtimePath.replace(';', os.pathsep)
+parser.add_argument(
+    '--executable',
+    required=True,
+    help='Path to executable to run, relative to binary-dir.'
+)
+
+parser.add_argument(
+    '--binary-dir',
+    required=True,
+    help='CMake\'s Binary directory, will be used with executable.'
+)
+
+parser.add_argument(
+    '--working-dir',
+    required=True,
+    help='Directory to run the executable from.'
+)
+
+parser.add_argument(
+    '--asset-path',
+    required=True,
+    help='Semicolon-delimited list of asset paths, will be used in ASSET_PATH.'
+)
+
+parser.add_argument(
+    '--runtime-path',
+    required=True,
+    help='Semicolon-delimted list of runtime paths, will be used in PATH or LD_LIBRARY_PATH.'
+)
+
+args = parser.parse_args()
+
+name       = args.name
+executable = args.executable
+binaryDir  = args.binary_dir
+workingDir = args.working_dir
+rootDir    = os.getcwd()
+
+# Replace with OS-specific multiple path separator (';' for PATH, ':' for LD_LIBRARY_PATH)
+assetPath   = args.asset_path.replace(';', os.pathsep)
+runtimePath = args.runtime_path.replace(';', os.pathsep)
 
 def add_or_update_config(data, configurations):
     found = False
@@ -48,9 +87,9 @@ if os.path.isdir('.vscode'):
         'name': name,
         'type': 'cppdbg',
         'request': 'launch',
-        'program': executable,
+        'program': os.path.join(binaryDir, executable),
         'args': [],
-        'cwd': sourceDir,
+        'cwd': workingDir,
         'environment': [
             {
                 'name': 'ASSET_PATH',
@@ -77,48 +116,36 @@ if os.path.isdir('.vscode'):
     file = open(filename, 'w')
     json.dump(launch, file, indent=4)
 
-# if isWindows and os.path.isdir('.vs'):
-#     filename = '.vs/launch.vs.json'
+if isWindows and os.path.isdir('.vs'):
+    filename = '.vs/launch.vs.json'
 
-#     launch = {}
-#     try:
-#         file = open(filename, 'r')
-#         launch = json.load(file)
-#     except:
-#         pass
+    launch = {}
+    try:
+        file = open(filename, 'r')
+        launch = json.load(file)
+    except:
+        pass
 
-#     if 'version' not in launch:
-#         launch['version'] = '0.2.1'
+    if 'version' not in launch:
+        launch['version'] = '0.2.1'
 
-#     if 'configurations' not in launch:
-#         launch['configurations'] = []
+    if 'configurations' not in launch:
+        launch['configurations'] = []
 
-#     default = {
-#         'name': '',
-#         'type': 'default', # dll
-#         # 'exe': executable,
-#         'project': 'CMakeLists.txt',
-#         'projectTarget': '{} ({})'.format(os.path.basename(executable), executable),
-#         'cwd': projectDirectory,
-#         'env': {
-#             'PATH': '${env.PATH};' + runtimePath,
-#             'DUSK_ASSET_PATH': assetPath,
-#         },
-#     }
+    data = {
+        'name': name,
+        'type': 'default',
+        'project': 'CMakeLists.txt',
+        'args': [],
+        'projectTarget': '{} ({})'.format(os.path.basename(executable), executable),
+        'cwd': workingDir,
+        'env': {
+            'PATH': '${env.PATH};' + runtimePath,
+            'ASSET_PATH': assetPath,
+        },
+    }
 
-#     if 'configurations' in project:
-#         for name,config in project['configurations'].items():
-#             data = copy.deepcopy(default)
-#             data['name'] = "%s (%s)" % (project['name'], name)
-#             data['args'] = [ duskproj, '-c', name ]
+    add_or_update_config(data, launch['configurations'])
 
-#             add_or_update_config(data, launch['configurations'])
-#     else:
-#         data = copy.copy(default)
-#         data['name'] = project['name']
-#         data['args'] = [ duskproj ]
-
-#         add_or_update_config(data, launch['configurations'])
-
-#     file = open(filename, 'w')
-#     json.dump(launch, file, indent=4)
+    file = open(filename, 'w')
+    json.dump(launch, file, indent=4)

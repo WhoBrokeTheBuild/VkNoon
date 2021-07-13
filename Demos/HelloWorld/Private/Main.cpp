@@ -1,9 +1,9 @@
-#include <cstdio>
+#include <Noon/Noon.hpp>
 
-#include <VkNoon/VkNoon.hpp>
+#include <cstdio>
 
 int main(int argc, char ** argv)
 {
-    printf("VkNoon Version: %s\n", VkNoon::GetVersionString().c_str());
+    printf("Noon Version: %s\n", Noon::GetVersionString().c_str());
     return 0;
 }

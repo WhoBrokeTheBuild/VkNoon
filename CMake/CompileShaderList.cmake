@@ -3,6 +3,11 @@
 # Compile a list of shaders using glslc.
 #
 
+# Allow Ninja to transform DEPFILEs
+IF(POLICY CMP0116)
+    CMAKE_POLICY(SET CMP0116 NEW)
+ENDIF()
+
 MACRO(COMPILE_SHADER_LIST _input_list _output_list)
     FOREACH(_input ${_input_list})
         GET_FILENAME_COMPONENT(_input_path ${_input} DIRECTORY)

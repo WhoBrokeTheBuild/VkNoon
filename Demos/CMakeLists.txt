@@ -56,7 +56,7 @@ MACRO(DEFINE_DEMO _target)
     TARGET_LINK_LIBRARIES(
         ${_target}
         PRIVATE
-            VkNoon
+            Noon
     )
 
     TARGET_INCLUDE_DIRECTORIES(
@@ -64,13 +64,6 @@ MACRO(DEFINE_DEMO _target)
         PRIVATE
             ${CMAKE_CURRENT_SOURCE_DIR}/Source
             ${CMAKE_CURRENT_BINARY_DIR}/Source
-    )
-
-    TARGET_COMPILE_DEFINITIONS(
-        ${_target}
-        PUBLIC
-            # Disable VS "not secure" warnings
-            $<$<CXX_COMPILER_ID:MSVC>:_CRT_SECURE_NO_WARNINGS>
     )
 
     SET_TARGET_PROPERTIES(
@@ -81,20 +74,22 @@ MACRO(DEFINE_DEMO _target)
             CXX_EXTENSIONS OFF
     )
 
-    STRING(REPLACE " " "\\ " ASSET_PATH "${ASSET_PATH}")
-    STRING(REPLACE " " "\\ " RUNTIME_PATH "${RUNTIME_PATH}")
-
     IF(WIN32)
         SET(_ext ".exe")
     ENDIF()
 
+    FILE(RELATIVE_PATH _executable ${CMAKE_BINARY_DIR} ${CMAKE_CURRENT_BINARY_DIR}/${_target}${_ext})
+    FILE(TO_NATIVE_PATH ${_executable} _executable)
+
     EXECUTE_PROCESS(
         COMMAND ${Python3_EXECUTABLE}
             ${CMAKE_SOURCE_DIR}/Scripts/generate-launch-targets.py
-            ${CMAKE_CURRENT_BINARY_DIR}/${_target}${_ext}
-            ${CMAKE_CURRENT_SOURCE_DIR}
-            "${ASSET_PATH}"
-            "${RUNTIME_PATH}"
+            --name "${_target}"
+            --executable "${_executable}"
+            --binary-dir "${CMAKE_BINARY_DIR}"
+            --working-dir "${CMAKE_CURRENT_SOURCE_DIR}"
+            --asset-path "${ASSET_PATH}"
+            --runtime-path "${RUNTIME_PATH}"
         WORKING_DIRECTORY ${CMAKE_SOURCE_DIR}
     )
 

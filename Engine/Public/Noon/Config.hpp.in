@@ -1,0 +1,36 @@
+#ifndef NOON_CONFIG_HPP
+#define NOON_CONFIG_HPP
+
+#include <Noon/Platform.hpp>
+
+#define NOON_VERSION_MAJOR @PROJECT_VERSION_MAJOR@
+#define NOON_VERSION_MINOR @PROJECT_VERSION_MINOR@
+#define NOON_VERSION_PATCH @PROJECT_VERSION_PATCH@
+
+#define NOON_REVISION "@PROJECT_VERSION_GIT_HASH@"
+
+#define NOON_VERSION_NUMBER(MAJOR, MINOR, PATCH) \
+    (((MAJOR << 16) | (MINOR << 8) | PATCH))
+
+#define NOON_VERSION \
+    NOON_VERSION_NUMBER(NOON_VERSION_MAJOR, NOON_VERSION_MINOR, NOON_VERSION_PATCH)
+
+#define NOON_VERSION_STRING "@PROJECT_VERSION@-@PROJECT_VERSION_GIT_HASH@"
+
+#if NOON_COMPILER_MSVC
+    #define NOON_API_EXPORT __declspec(dllexport)
+    #define NOON_API_IMPORT __declspec(dllimport)
+#else
+    #if NOON_COMPILER_GCC >= 4 || NOON_COMPILER_CLANG
+        #define NOON_API_EXPORT __attribute__ ((__visibility__ ("default")))
+        #define NOON_API_IMPORT __attribute__ ((__visibility__ ("default")))
+    #endif
+#endif
+
+#if defined(NOON_EXPORT)
+    #define NOON_API NOON_API_EXPORT
+#else
+    #define NOON_API NOON_API_IMPORT
+#endif
+
+#endif // NOON_CONFIG_HPP
