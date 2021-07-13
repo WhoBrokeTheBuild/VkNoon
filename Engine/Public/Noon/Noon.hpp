@@ -2,13 +2,13 @@
 #define NOON_HPP
 
 #include <Noon/Config.hpp>
+#include <Noon/Version.hpp>
 
-#include <string>
+namespace noon {
 
-namespace Noon {
+NOON_API
+Version GetVersion();
 
-NOON_API std::string GetVersionString();
-
-} // namespace Noon
+} // namespace noon
 
 #endif // NOON_HPP

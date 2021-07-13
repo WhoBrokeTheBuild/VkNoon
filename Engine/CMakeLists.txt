@@ -59,6 +59,14 @@ ADD_LIBRARY(
     ${_shaders_out}
 )
 
+TARGET_LINK_LIBRARIES(
+    ${_target}
+    PUBLIC
+        SDL2::SDL2
+        SDL2::SDL2main
+        fmt::fmt
+)
+
 TARGET_INCLUDE_DIRECTORIES(
     ${_target}
     PUBLIC

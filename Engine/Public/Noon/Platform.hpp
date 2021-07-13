@@ -58,4 +58,16 @@
 
 #endif
 
+#if defined(NOON_PLATFORM_WINDOWS)
+
+    #define NOON_PATH_SLASH '\\'
+    #define NOON_PATH_SEPARATOR ';'
+
+#else
+
+    #define NOON_PATH_SLASH '/'
+    #define NOON_PATH_SEPARATOR ':'
+
+#endif
+
 #endif // NOON_PLATFORM_HPP

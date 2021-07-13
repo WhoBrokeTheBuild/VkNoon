@@ -1,10 +1,11 @@
 #include <Noon/Noon.hpp>
 
-namespace Noon {
+namespace noon {
 
-NOON_API std::string GetVersionString()
+NOON_API
+Version GetVersion()
 {
-    return NOON_VERSION_STRING;
+    return Version(NOON_VERSION_MAJOR, NOON_VERSION_MINOR, NOON_VERSION_PATCH);
 }
 
 } // namespace Noon
