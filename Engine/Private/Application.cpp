@@ -24,6 +24,18 @@ Application::~Application()
 }
 
 NOON_API
+Version Application::GetVersion()
+{
+    return Version(0, 0, 0);
+}
+
+NOON_API
+string Application::GetName()
+{
+    return "Noon";
+}
+
+NOON_API
 void Application::Run()
 {
     using namespace std::chrono;

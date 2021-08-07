@@ -25,9 +25,6 @@ int GLAD_VK_VERSION_1_1 = 0;
 int GLAD_VK_VERSION_1_2 = 0;
 int GLAD_VK_EXT_debug_utils = 0;
 int GLAD_VK_EXT_memory_budget = 0;
-int GLAD_VK_KHR_bind_memory2 = 0;
-int GLAD_VK_KHR_dedicated_allocation = 0;
-int GLAD_VK_KHR_get_memory_requirements2 = 0;
 int GLAD_VK_KHR_surface = 0;
 
 
@@ -38,10 +35,8 @@ PFN_vkAllocateMemory glad_vkAllocateMemory = NULL;
 PFN_vkBeginCommandBuffer glad_vkBeginCommandBuffer = NULL;
 PFN_vkBindBufferMemory glad_vkBindBufferMemory = NULL;
 PFN_vkBindBufferMemory2 glad_vkBindBufferMemory2 = NULL;
-PFN_vkBindBufferMemory2KHR glad_vkBindBufferMemory2KHR = NULL;
 PFN_vkBindImageMemory glad_vkBindImageMemory = NULL;
 PFN_vkBindImageMemory2 glad_vkBindImageMemory2 = NULL;
-PFN_vkBindImageMemory2KHR glad_vkBindImageMemory2KHR = NULL;
 PFN_vkCmdBeginDebugUtilsLabelEXT glad_vkCmdBeginDebugUtilsLabelEXT = NULL;
 PFN_vkCmdBeginQuery glad_vkCmdBeginQuery = NULL;
 PFN_vkCmdBeginRenderPass glad_vkCmdBeginRenderPass = NULL;
@@ -161,7 +156,6 @@ PFN_vkFreeMemory glad_vkFreeMemory = NULL;
 PFN_vkGetBufferDeviceAddress glad_vkGetBufferDeviceAddress = NULL;
 PFN_vkGetBufferMemoryRequirements glad_vkGetBufferMemoryRequirements = NULL;
 PFN_vkGetBufferMemoryRequirements2 glad_vkGetBufferMemoryRequirements2 = NULL;
-PFN_vkGetBufferMemoryRequirements2KHR glad_vkGetBufferMemoryRequirements2KHR = NULL;
 PFN_vkGetBufferOpaqueCaptureAddress glad_vkGetBufferOpaqueCaptureAddress = NULL;
 PFN_vkGetDescriptorSetLayoutSupport glad_vkGetDescriptorSetLayoutSupport = NULL;
 PFN_vkGetDeviceGroupPeerMemoryFeatures glad_vkGetDeviceGroupPeerMemoryFeatures = NULL;
@@ -174,10 +168,8 @@ PFN_vkGetEventStatus glad_vkGetEventStatus = NULL;
 PFN_vkGetFenceStatus glad_vkGetFenceStatus = NULL;
 PFN_vkGetImageMemoryRequirements glad_vkGetImageMemoryRequirements = NULL;
 PFN_vkGetImageMemoryRequirements2 glad_vkGetImageMemoryRequirements2 = NULL;
-PFN_vkGetImageMemoryRequirements2KHR glad_vkGetImageMemoryRequirements2KHR = NULL;
 PFN_vkGetImageSparseMemoryRequirements glad_vkGetImageSparseMemoryRequirements = NULL;
 PFN_vkGetImageSparseMemoryRequirements2 glad_vkGetImageSparseMemoryRequirements2 = NULL;
-PFN_vkGetImageSparseMemoryRequirements2KHR glad_vkGetImageSparseMemoryRequirements2KHR = NULL;
 PFN_vkGetImageSubresourceLayout glad_vkGetImageSubresourceLayout = NULL;
 PFN_vkGetInstanceProcAddr glad_vkGetInstanceProcAddr = NULL;
 PFN_vkGetPhysicalDeviceExternalBufferProperties glad_vkGetPhysicalDeviceExternalBufferProperties = NULL;
@@ -434,17 +426,6 @@ static void glad_vk_load_VK_EXT_debug_utils( GLADuserptrloadfunc load, void* use
     glad_vkSetDebugUtilsObjectTagEXT = (PFN_vkSetDebugUtilsObjectTagEXT) load(userptr, "vkSetDebugUtilsObjectTagEXT");
     glad_vkSubmitDebugUtilsMessageEXT = (PFN_vkSubmitDebugUtilsMessageEXT) load(userptr, "vkSubmitDebugUtilsMessageEXT");
 }
-static void glad_vk_load_VK_KHR_bind_memory2( GLADuserptrloadfunc load, void* userptr) {
-    if(!GLAD_VK_KHR_bind_memory2) return;
-    glad_vkBindBufferMemory2KHR = (PFN_vkBindBufferMemory2KHR) load(userptr, "vkBindBufferMemory2KHR");
-    glad_vkBindImageMemory2KHR = (PFN_vkBindImageMemory2KHR) load(userptr, "vkBindImageMemory2KHR");
-}
-static void glad_vk_load_VK_KHR_get_memory_requirements2( GLADuserptrloadfunc load, void* userptr) {
-    if(!GLAD_VK_KHR_get_memory_requirements2) return;
-    glad_vkGetBufferMemoryRequirements2KHR = (PFN_vkGetBufferMemoryRequirements2KHR) load(userptr, "vkGetBufferMemoryRequirements2KHR");
-    glad_vkGetImageMemoryRequirements2KHR = (PFN_vkGetImageMemoryRequirements2KHR) load(userptr, "vkGetImageMemoryRequirements2KHR");
-    glad_vkGetImageSparseMemoryRequirements2KHR = (PFN_vkGetImageSparseMemoryRequirements2KHR) load(userptr, "vkGetImageSparseMemoryRequirements2KHR");
-}
 static void glad_vk_load_VK_KHR_surface( GLADuserptrloadfunc load, void* userptr) {
     if(!GLAD_VK_KHR_surface) return;
     glad_vkDestroySurfaceKHR = (PFN_vkDestroySurfaceKHR) load(userptr, "vkDestroySurfaceKHR");
@@ -585,9 +566,6 @@ static int glad_vk_find_extensions_vulkan( VkPhysicalDevice physical_device) {
 
     GLAD_VK_EXT_debug_utils = glad_vk_has_extension("VK_EXT_debug_utils", extension_count, extensions);
     GLAD_VK_EXT_memory_budget = glad_vk_has_extension("VK_EXT_memory_budget", extension_count, extensions);
-    GLAD_VK_KHR_bind_memory2 = glad_vk_has_extension("VK_KHR_bind_memory2", extension_count, extensions);
-    GLAD_VK_KHR_dedicated_allocation = glad_vk_has_extension("VK_KHR_dedicated_allocation", extension_count, extensions);
-    GLAD_VK_KHR_get_memory_requirements2 = glad_vk_has_extension("VK_KHR_get_memory_requirements2", extension_count, extensions);
     GLAD_VK_KHR_surface = glad_vk_has_extension("VK_KHR_surface", extension_count, extensions);
 
     (void) glad_vk_has_extension;
@@ -646,8 +624,6 @@ int gladLoadVulkanUserPtr( VkPhysicalDevice physical_device, GLADuserptrloadfunc
 
     if (!glad_vk_find_extensions_vulkan( physical_device)) return 0;
     glad_vk_load_VK_EXT_debug_utils(load, userptr);
-    glad_vk_load_VK_KHR_bind_memory2(load, userptr);
-    glad_vk_load_VK_KHR_get_memory_requirements2(load, userptr);
     glad_vk_load_VK_KHR_surface(load, userptr);
 
 
@@ -740,10 +716,8 @@ static const char* DEVICE_FUNCTIONS[] = {
     "vkBeginCommandBuffer",
     "vkBindBufferMemory",
     "vkBindBufferMemory2",
-    "vkBindBufferMemory2KHR",
     "vkBindImageMemory",
     "vkBindImageMemory2",
-    "vkBindImageMemory2KHR",
     "vkCmdBeginDebugUtilsLabelEXT",
     "vkCmdBeginQuery",
     "vkCmdBeginRenderPass",
@@ -850,7 +824,6 @@ static const char* DEVICE_FUNCTIONS[] = {
     "vkGetBufferDeviceAddress",
     "vkGetBufferMemoryRequirements",
     "vkGetBufferMemoryRequirements2",
-    "vkGetBufferMemoryRequirements2KHR",
     "vkGetBufferOpaqueCaptureAddress",
     "vkGetDescriptorSetLayoutSupport",
     "vkGetDeviceGroupPeerMemoryFeatures",
@@ -863,10 +836,8 @@ static const char* DEVICE_FUNCTIONS[] = {
     "vkGetFenceStatus",
     "vkGetImageMemoryRequirements",
     "vkGetImageMemoryRequirements2",
-    "vkGetImageMemoryRequirements2KHR",
     "vkGetImageSparseMemoryRequirements",
     "vkGetImageSparseMemoryRequirements2",
-    "vkGetImageSparseMemoryRequirements2KHR",
     "vkGetImageSubresourceLayout",
     "vkGetPipelineCacheData",
     "vkGetQueryPoolResults",

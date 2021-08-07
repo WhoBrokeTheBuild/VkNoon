@@ -7,14 +7,25 @@
 #include <SDL.h>
 #include <glad/vulkan.h>
 
+NOON_DISABLE_WARNINGS()
+
+    #include <vk_mem_alloc.h>
+
+NOON_ENABLE_WARNINGS()
+
 #include <vector>
 #include <unordered_map>
 
 namespace noon {
 
+using std::vector;
+using std::unordered_map;
+
 class NOON_API GraphicsDriver
 {
 public:
+
+    NOON_DISALLOW_COPY_AND_ASSIGN(GraphicsDriver);
 
     GraphicsDriver();
 
@@ -24,17 +35,21 @@ public:
     
     void Render();
 
+protected:
+
+    bool HasLayerAvailable(const char * layer);
+
+    bool HasInstanceExtensionAvailable(const char * extension);
+
+    bool HasDeviceExtensionAvailable(const char * extension);
+
+    virtual vector<const char *> GetRequiredLayerList();
+
+    virtual vector<const char *> GetRequiredInstanceExtensionList();
+
+    virtual vector<const char *> GetRequiredDeviceExtensionList();
+
 private:
-
-    bool IsDeviceSuitable(const VkPhysicalDevice device);
-
-    std::vector<const char *> GetRequiredLayers();
-
-    std::vector<const char *> GetRequiredDeviceExtensions();
-
-    std::vector<const char *> GetRequiredInstanceExtensions();
-
-    void GetPhysicalDevice();
 
     void InitWindow();
 
@@ -44,13 +59,19 @@ private:
 
     void TermInstance();
 
+    void InitDebugUtilsMessenger();
+
+    void TermDebugUtilsMessenger();
+
     void InitSurface();
 
     void TermSurface();
 
-    void InitLogicalDevice();
+    void FindPhysicalDevice();
 
-    void TermLogicalDevice();
+    void InitDevice();
+
+    void TermDevice();
 
     void InitAllocator();
 
@@ -70,13 +91,15 @@ private:
 
     SDL_Window * _sdlWindow;
 
-    std::unordered_map<string, VkLayerProperties> _vkAvailableLayers;
+    unordered_map<string, VkLayerProperties> _vkAvailableLayerMap;
 
-    std::unordered_map<string, VkExtensionProperties> _vkAvailableInstanceExtensions;
+    unordered_map<string, VkExtensionProperties> _vkAvailableInstanceExtensionMap;
 
-    std::unordered_map<string, VkExtensionProperties> _vkAvailableDeviceExtensions;
+    unordered_map<string, VkExtensionProperties> _vkAvailableDeviceExtensionMap;
     
     VkInstance _vkInstance = nullptr;
+
+    VkDebugUtilsMessengerCreateInfoEXT _vkDebugMessengerCreateInfo;
 
     VkDebugUtilsMessengerEXT _vkDebugMessenger = nullptr;
 
@@ -88,6 +111,13 @@ private:
 
     VkPhysicalDevice _vkPhysicalDevice = nullptr;
 
+    VkDevice _vkDevice = nullptr;
+
+    VkQueue _vkGraphicsQueue = nullptr;
+    
+    VkQueue _vkPresentQueue = nullptr;
+
+    VmaAllocator _vmaAllocator;
 
 }; // class GraphicsDriver
 

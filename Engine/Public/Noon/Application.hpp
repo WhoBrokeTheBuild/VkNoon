@@ -3,12 +3,15 @@
 
 #include <Noon/Config.hpp>
 #include <Noon/GraphicsDriver.hpp>
+#include <Noon/Version.hpp>
 
 namespace noon {
 
 class NOON_API Application
 {
 public:
+
+    NOON_DISALLOW_COPY_AND_ASSIGN(Application);
 
     static Application * GetInstance() {
         return _Instance;
@@ -17,6 +20,10 @@ public:
     Application();
 
     virtual ~Application();
+
+    virtual Version GetVersion();
+
+    virtual string GetName();
 
     float GetTargetFPS() const {
         return _targetFPS;
