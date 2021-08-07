@@ -185,9 +185,8 @@ static VKAPI_ATTR VkBool32 VKAPI_CALL _VulkanDebugMessageCallback(
     }
 
     Log("VkDebugUtilsMessenger",
-        "[{}][{}] {}", 
+        "[{}] {}", 
         prefix,
-        callbackData->pMessageIdName,
         callbackData->pMessage);
 
     for (uint32_t i = 0; i < callbackData->objectCount; ++i) {

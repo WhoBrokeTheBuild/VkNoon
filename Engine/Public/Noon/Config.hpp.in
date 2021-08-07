@@ -1,7 +1,7 @@
 #ifndef NOON_CONFIG_HPP
 #define NOON_CONFIG_HPP
 
-#include <Noon/Platform.hpp>
+#include <Noon/Macros.hpp>
 
 #define NOON_VERSION_MAJOR @PROJECT_VERSION_MAJOR@
 #define NOON_VERSION_MINOR @PROJECT_VERSION_MINOR@
