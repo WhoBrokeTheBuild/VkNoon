@@ -43,22 +43,22 @@ void GraphicsDriver::Render()
 
 bool GraphicsDriver::IsDeviceSuitable(const VkPhysicalDevice device)
 {
-
+    return true;
 }
 
 std::vector<const char *> GraphicsDriver::GetRequiredLayers()
 {
-
+    return {};
 }
 
 std::vector<const char *> GraphicsDriver::GetRequiredDeviceExtensions()
 {
-
+    return {};
 }
 
 std::vector<const char *> GraphicsDriver::GetRequiredInstanceExtensions()
 {
-
+    return {};
 }
 
 void GraphicsDriver::GetPhysicalDevice()
@@ -126,7 +126,7 @@ void GraphicsDriver::InitInstance()
 
     Log(NOON_ANCHOR, "Available Vulkan Layers:");
     for (const auto& layer : availableLayerList) {
-        Log(NOON_ANCHOR, "\t{}: {}");
+        Log(NOON_ANCHOR, "\t{}: {}", layer.layerName, layer.description);
     }
 }
 
@@ -141,11 +141,6 @@ void GraphicsDriver::InitSurface()
 }
 
 void GraphicsDriver::TermSurface()
-{
-
-}
-
-void GraphicsDriver::InitPhysicalDevice()
 {
 
 }
@@ -244,9 +239,9 @@ string VkResultToString(VkResult vkResult)
             return "VK_ERROR_FRAGMENTATION";
         case VK_ERROR_INVALID_OPAQUE_CAPTURE_ADDRESS:
             return "VK_ERROR_INVALID_OPAQUE_CAPTURE_ADDRESS";
+        default:
+            return "Unknown";
     }
-
-    return "";
 }
 
 } // namespace noon

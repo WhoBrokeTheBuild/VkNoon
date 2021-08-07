@@ -2,11 +2,13 @@
 #define NOON_GRAPHICS_DRIVER_HPP
 
 #include <Noon/Config.hpp>
+#include <Noon/String.hpp>
 
 #include <SDL.h>
 #include <glad/vulkan.h>
 
 #include <vector>
+#include <unordered_map>
 
 namespace noon {
 

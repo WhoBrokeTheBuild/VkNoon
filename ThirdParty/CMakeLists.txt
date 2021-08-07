@@ -104,6 +104,9 @@ ELSE()
             BINARY_DIR          ${fmt_BINARY_DIR}
             CMAKE_ARGS          -DCMAKE_INSTALL_PREFIX=${fmt_ROOT}
                                 -DCMAKE_BUILD_TYPE=${CMAKE_BUILD_TYPE}
+                                -DFMT_DOC=OFF
+                                -DFMT_TEST=OFF
+                                -DCMAKE_POSITION_INDEPENDENT_CODE=ON
             BUILD_COMMAND       ""
             UPDATE_COMMAND      ""
             TEST_COMMAND        ""
