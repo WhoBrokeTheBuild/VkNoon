@@ -25,6 +25,7 @@ int GLAD_VK_VERSION_1_1 = 0;
 int GLAD_VK_VERSION_1_2 = 0;
 int GLAD_VK_EXT_debug_utils = 0;
 int GLAD_VK_EXT_memory_budget = 0;
+int GLAD_VK_EXT_swapchain_colorspace = 0;
 int GLAD_VK_KHR_surface = 0;
 
 
@@ -566,6 +567,7 @@ static int glad_vk_find_extensions_vulkan( VkPhysicalDevice physical_device) {
 
     GLAD_VK_EXT_debug_utils = glad_vk_has_extension("VK_EXT_debug_utils", extension_count, extensions);
     GLAD_VK_EXT_memory_budget = glad_vk_has_extension("VK_EXT_memory_budget", extension_count, extensions);
+    GLAD_VK_EXT_swapchain_colorspace = glad_vk_has_extension("VK_EXT_swapchain_colorspace", extension_count, extensions);
     GLAD_VK_KHR_surface = glad_vk_has_extension("VK_KHR_surface", extension_count, extensions);
 
     (void) glad_vk_has_extension;

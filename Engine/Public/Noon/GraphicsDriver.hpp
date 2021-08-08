@@ -119,9 +119,15 @@ private:
 
     VmaAllocator _vmaAllocator;
 
+    VkSurfaceFormatKHR _vkSwapChainImageFormat;
+
 }; // class GraphicsDriver
 
 string VkResultToString(VkResult vkResult);
+
+string VkFormatToString(VkFormat vkFormat);
+
+string VkColorSpaceToString(VkColorSpaceKHR vkColorSpace);
 
 } // namespace noon
 
