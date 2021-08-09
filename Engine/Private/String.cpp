@@ -1,6 +1,5 @@
 #include <Noon/String.hpp>
-
-#include <vector>
+#include <Noon/Containers.hpp>
 
 #if defined(NOON_PLATFORM_WINDOWS)
 
@@ -13,12 +12,12 @@ namespace noon {
 #if defined(NOON_PLATFORM_WINDOWS)
 
     NOON_API
-    std::wstring ConvertUTF8ToWideString(string str)
+    std::wstring ConvertUTF8ToWideString(String str)
     {
         size_t maxSize = str.size() + 1;
 
         // Initialize to maximum potential size
-        std::vector<wchar_t> wide(maxSize);
+        List<wchar_t> wide(maxSize);
 
         int result = MultiByteToWideChar(
             CP_UTF8, 0, 
@@ -33,13 +32,13 @@ namespace noon {
     }
 
     NOON_API
-    std::string ConvertWideStringToUTF8(std::wstring wstr)
+    String ConvertWideStringToUTF8(std::wstring wstr)
     {
         // Each wide character can become between 1 and 4 bytes in UTF-8
         size_t maxSize = (wstr.size() * 4) + 1;
 
         // Initialize to maximum potential size
-        std::vector<char> utf8(maxSize);
+        List<char> utf8(maxSize);
 
         int result = WideCharToMultiByte(
             CP_UTF8, 0,
@@ -48,10 +47,10 @@ namespace noon {
             NULL, NULL);
             
         if (result <= 0) {
-            return string();
+            return String();
         }
 
-        return string(utf8.data());
+        return String(utf8.data());
     }
 
 #endif // defined(NOON_PLATFORM_WINDOWS)

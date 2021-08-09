@@ -16,10 +16,10 @@ namespace noon {
 #define NOON_ANCHOR (fmt::format("{}:{}", noon::Path(__FILE__).GetFilename().ToCString(), __LINE__))
 
 NOON_API
-void LogMessage(string_view tag, string_view message);
+void LogMessage(StringView tag, StringView message);
 
 template <class... Args>
-inline void Log(string_view tag, string_view format, const Args&... args) {
+inline void Log(StringView tag, StringView format, const Args&... args) {
     LogMessage(tag, fmt::format(format, args...));
 }
 

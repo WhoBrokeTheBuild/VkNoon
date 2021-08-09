@@ -27,9 +27,12 @@ int GLAD_VK_EXT_debug_utils = 0;
 int GLAD_VK_EXT_memory_budget = 0;
 int GLAD_VK_EXT_swapchain_colorspace = 0;
 int GLAD_VK_KHR_surface = 0;
+int GLAD_VK_KHR_swapchain = 0;
 
 
 
+PFN_vkAcquireNextImage2KHR glad_vkAcquireNextImage2KHR = NULL;
+PFN_vkAcquireNextImageKHR glad_vkAcquireNextImageKHR = NULL;
 PFN_vkAllocateCommandBuffers glad_vkAllocateCommandBuffers = NULL;
 PFN_vkAllocateDescriptorSets glad_vkAllocateDescriptorSets = NULL;
 PFN_vkAllocateMemory glad_vkAllocateMemory = NULL;
@@ -117,6 +120,7 @@ PFN_vkCreateSampler glad_vkCreateSampler = NULL;
 PFN_vkCreateSamplerYcbcrConversion glad_vkCreateSamplerYcbcrConversion = NULL;
 PFN_vkCreateSemaphore glad_vkCreateSemaphore = NULL;
 PFN_vkCreateShaderModule glad_vkCreateShaderModule = NULL;
+PFN_vkCreateSwapchainKHR glad_vkCreateSwapchainKHR = NULL;
 PFN_vkDestroyBuffer glad_vkDestroyBuffer = NULL;
 PFN_vkDestroyBufferView glad_vkDestroyBufferView = NULL;
 PFN_vkDestroyCommandPool glad_vkDestroyCommandPool = NULL;
@@ -141,6 +145,7 @@ PFN_vkDestroySamplerYcbcrConversion glad_vkDestroySamplerYcbcrConversion = NULL;
 PFN_vkDestroySemaphore glad_vkDestroySemaphore = NULL;
 PFN_vkDestroyShaderModule glad_vkDestroyShaderModule = NULL;
 PFN_vkDestroySurfaceKHR glad_vkDestroySurfaceKHR = NULL;
+PFN_vkDestroySwapchainKHR glad_vkDestroySwapchainKHR = NULL;
 PFN_vkDeviceWaitIdle glad_vkDeviceWaitIdle = NULL;
 PFN_vkEndCommandBuffer glad_vkEndCommandBuffer = NULL;
 PFN_vkEnumerateDeviceExtensionProperties glad_vkEnumerateDeviceExtensionProperties = NULL;
@@ -160,6 +165,8 @@ PFN_vkGetBufferMemoryRequirements2 glad_vkGetBufferMemoryRequirements2 = NULL;
 PFN_vkGetBufferOpaqueCaptureAddress glad_vkGetBufferOpaqueCaptureAddress = NULL;
 PFN_vkGetDescriptorSetLayoutSupport glad_vkGetDescriptorSetLayoutSupport = NULL;
 PFN_vkGetDeviceGroupPeerMemoryFeatures glad_vkGetDeviceGroupPeerMemoryFeatures = NULL;
+PFN_vkGetDeviceGroupPresentCapabilitiesKHR glad_vkGetDeviceGroupPresentCapabilitiesKHR = NULL;
+PFN_vkGetDeviceGroupSurfacePresentModesKHR glad_vkGetDeviceGroupSurfacePresentModesKHR = NULL;
 PFN_vkGetDeviceMemoryCommitment glad_vkGetDeviceMemoryCommitment = NULL;
 PFN_vkGetDeviceMemoryOpaqueCaptureAddress glad_vkGetDeviceMemoryOpaqueCaptureAddress = NULL;
 PFN_vkGetDeviceProcAddr glad_vkGetDeviceProcAddr = NULL;
@@ -184,6 +191,7 @@ PFN_vkGetPhysicalDeviceImageFormatProperties glad_vkGetPhysicalDeviceImageFormat
 PFN_vkGetPhysicalDeviceImageFormatProperties2 glad_vkGetPhysicalDeviceImageFormatProperties2 = NULL;
 PFN_vkGetPhysicalDeviceMemoryProperties glad_vkGetPhysicalDeviceMemoryProperties = NULL;
 PFN_vkGetPhysicalDeviceMemoryProperties2 glad_vkGetPhysicalDeviceMemoryProperties2 = NULL;
+PFN_vkGetPhysicalDevicePresentRectanglesKHR glad_vkGetPhysicalDevicePresentRectanglesKHR = NULL;
 PFN_vkGetPhysicalDeviceProperties glad_vkGetPhysicalDeviceProperties = NULL;
 PFN_vkGetPhysicalDeviceProperties2 glad_vkGetPhysicalDeviceProperties2 = NULL;
 PFN_vkGetPhysicalDeviceQueueFamilyProperties glad_vkGetPhysicalDeviceQueueFamilyProperties = NULL;
@@ -198,6 +206,7 @@ PFN_vkGetPipelineCacheData glad_vkGetPipelineCacheData = NULL;
 PFN_vkGetQueryPoolResults glad_vkGetQueryPoolResults = NULL;
 PFN_vkGetRenderAreaGranularity glad_vkGetRenderAreaGranularity = NULL;
 PFN_vkGetSemaphoreCounterValue glad_vkGetSemaphoreCounterValue = NULL;
+PFN_vkGetSwapchainImagesKHR glad_vkGetSwapchainImagesKHR = NULL;
 PFN_vkInvalidateMappedMemoryRanges glad_vkInvalidateMappedMemoryRanges = NULL;
 PFN_vkMapMemory glad_vkMapMemory = NULL;
 PFN_vkMergePipelineCaches glad_vkMergePipelineCaches = NULL;
@@ -205,6 +214,7 @@ PFN_vkQueueBeginDebugUtilsLabelEXT glad_vkQueueBeginDebugUtilsLabelEXT = NULL;
 PFN_vkQueueBindSparse glad_vkQueueBindSparse = NULL;
 PFN_vkQueueEndDebugUtilsLabelEXT glad_vkQueueEndDebugUtilsLabelEXT = NULL;
 PFN_vkQueueInsertDebugUtilsLabelEXT glad_vkQueueInsertDebugUtilsLabelEXT = NULL;
+PFN_vkQueuePresentKHR glad_vkQueuePresentKHR = NULL;
 PFN_vkQueueSubmit glad_vkQueueSubmit = NULL;
 PFN_vkQueueWaitIdle glad_vkQueueWaitIdle = NULL;
 PFN_vkResetCommandBuffer glad_vkResetCommandBuffer = NULL;
@@ -435,6 +445,18 @@ static void glad_vk_load_VK_KHR_surface( GLADuserptrloadfunc load, void* userptr
     glad_vkGetPhysicalDeviceSurfacePresentModesKHR = (PFN_vkGetPhysicalDeviceSurfacePresentModesKHR) load(userptr, "vkGetPhysicalDeviceSurfacePresentModesKHR");
     glad_vkGetPhysicalDeviceSurfaceSupportKHR = (PFN_vkGetPhysicalDeviceSurfaceSupportKHR) load(userptr, "vkGetPhysicalDeviceSurfaceSupportKHR");
 }
+static void glad_vk_load_VK_KHR_swapchain( GLADuserptrloadfunc load, void* userptr) {
+    if(!GLAD_VK_KHR_swapchain) return;
+    glad_vkAcquireNextImage2KHR = (PFN_vkAcquireNextImage2KHR) load(userptr, "vkAcquireNextImage2KHR");
+    glad_vkAcquireNextImageKHR = (PFN_vkAcquireNextImageKHR) load(userptr, "vkAcquireNextImageKHR");
+    glad_vkCreateSwapchainKHR = (PFN_vkCreateSwapchainKHR) load(userptr, "vkCreateSwapchainKHR");
+    glad_vkDestroySwapchainKHR = (PFN_vkDestroySwapchainKHR) load(userptr, "vkDestroySwapchainKHR");
+    glad_vkGetDeviceGroupPresentCapabilitiesKHR = (PFN_vkGetDeviceGroupPresentCapabilitiesKHR) load(userptr, "vkGetDeviceGroupPresentCapabilitiesKHR");
+    glad_vkGetDeviceGroupSurfacePresentModesKHR = (PFN_vkGetDeviceGroupSurfacePresentModesKHR) load(userptr, "vkGetDeviceGroupSurfacePresentModesKHR");
+    glad_vkGetPhysicalDevicePresentRectanglesKHR = (PFN_vkGetPhysicalDevicePresentRectanglesKHR) load(userptr, "vkGetPhysicalDevicePresentRectanglesKHR");
+    glad_vkGetSwapchainImagesKHR = (PFN_vkGetSwapchainImagesKHR) load(userptr, "vkGetSwapchainImagesKHR");
+    glad_vkQueuePresentKHR = (PFN_vkQueuePresentKHR) load(userptr, "vkQueuePresentKHR");
+}
 
 
 
@@ -569,6 +591,7 @@ static int glad_vk_find_extensions_vulkan( VkPhysicalDevice physical_device) {
     GLAD_VK_EXT_memory_budget = glad_vk_has_extension("VK_EXT_memory_budget", extension_count, extensions);
     GLAD_VK_EXT_swapchain_colorspace = glad_vk_has_extension("VK_EXT_swapchain_colorspace", extension_count, extensions);
     GLAD_VK_KHR_surface = glad_vk_has_extension("VK_KHR_surface", extension_count, extensions);
+    GLAD_VK_KHR_swapchain = glad_vk_has_extension("VK_KHR_swapchain", extension_count, extensions);
 
     (void) glad_vk_has_extension;
 
@@ -627,6 +650,7 @@ int gladLoadVulkanUserPtr( VkPhysicalDevice physical_device, GLADuserptrloadfunc
     if (!glad_vk_find_extensions_vulkan( physical_device)) return 0;
     glad_vk_load_VK_EXT_debug_utils(load, userptr);
     glad_vk_load_VK_KHR_surface(load, userptr);
+    glad_vk_load_VK_KHR_swapchain(load, userptr);
 
 
     return version;
@@ -712,6 +736,8 @@ static GLADapiproc glad_dlsym_handle(void* handle, const char *name) {
 
 
 static const char* DEVICE_FUNCTIONS[] = {
+    "vkAcquireNextImage2KHR",
+    "vkAcquireNextImageKHR",
     "vkAllocateCommandBuffers",
     "vkAllocateDescriptorSets",
     "vkAllocateMemory",
@@ -796,6 +822,7 @@ static const char* DEVICE_FUNCTIONS[] = {
     "vkCreateSamplerYcbcrConversion",
     "vkCreateSemaphore",
     "vkCreateShaderModule",
+    "vkCreateSwapchainKHR",
     "vkDestroyBuffer",
     "vkDestroyBufferView",
     "vkDestroyCommandPool",
@@ -817,6 +844,7 @@ static const char* DEVICE_FUNCTIONS[] = {
     "vkDestroySamplerYcbcrConversion",
     "vkDestroySemaphore",
     "vkDestroyShaderModule",
+    "vkDestroySwapchainKHR",
     "vkDeviceWaitIdle",
     "vkEndCommandBuffer",
     "vkFlushMappedMemoryRanges",
@@ -829,6 +857,8 @@ static const char* DEVICE_FUNCTIONS[] = {
     "vkGetBufferOpaqueCaptureAddress",
     "vkGetDescriptorSetLayoutSupport",
     "vkGetDeviceGroupPeerMemoryFeatures",
+    "vkGetDeviceGroupPresentCapabilitiesKHR",
+    "vkGetDeviceGroupSurfacePresentModesKHR",
     "vkGetDeviceMemoryCommitment",
     "vkGetDeviceMemoryOpaqueCaptureAddress",
     "vkGetDeviceProcAddr",
@@ -845,6 +875,7 @@ static const char* DEVICE_FUNCTIONS[] = {
     "vkGetQueryPoolResults",
     "vkGetRenderAreaGranularity",
     "vkGetSemaphoreCounterValue",
+    "vkGetSwapchainImagesKHR",
     "vkInvalidateMappedMemoryRanges",
     "vkMapMemory",
     "vkMergePipelineCaches",
@@ -852,6 +883,7 @@ static const char* DEVICE_FUNCTIONS[] = {
     "vkQueueBindSparse",
     "vkQueueEndDebugUtilsLabelEXT",
     "vkQueueInsertDebugUtilsLabelEXT",
+    "vkQueuePresentKHR",
     "vkQueueSubmit",
     "vkQueueWaitIdle",
     "vkResetCommandBuffer",

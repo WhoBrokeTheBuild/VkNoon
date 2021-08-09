@@ -23,7 +23,7 @@ Path::Path(const Path& rhs)
 { }
 
 NOON_API
-Path::Path(const string& str)
+Path::Path(const String& str)
     : _path(str)
 {
     Normalize();
@@ -140,7 +140,7 @@ size_t Path::GetRootNameLength() const
         if (_path[2] != Slash && std::isprint(_path[2])) {
             // Find first separator after server name
             size_t pos = _path.find_first_of(Slash, 3);
-            if (pos == string::npos) {
+            if (pos == String::npos) {
                 // The entire path is just a network share name
                 return _path.length();
             }
@@ -161,7 +161,7 @@ Path GetCurrentPath()
 
     std::unique_ptr<char> cwd(_getcwd(nullptr, 0));
     if (cwd) {
-        return Path(string(cwd.get()));
+        return Path(String(cwd.get()));
     }
 
 #else

@@ -1,14 +1,11 @@
-#include <Noon/Noon.hpp>
-#include <Noon/Application.hpp>
+#include "HelloWorldApplication.hpp"
 
 #include <cstdio>
-
-using namespace noon;
 
 int main(int argc, char ** argv)
 {
     try {
-        Application app;
+        HelloWorldApplication app;
         app.Run();
     }
     catch (std::exception& e) {

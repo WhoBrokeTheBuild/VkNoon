@@ -30,7 +30,7 @@ Version Application::GetVersion()
 }
 
 NOON_API
-string Application::GetName()
+String Application::GetName()
 {
     return "Noon";
 }

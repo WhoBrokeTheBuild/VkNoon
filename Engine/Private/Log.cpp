@@ -3,7 +3,7 @@
 namespace noon {
 
 NOON_API
-void LogMessage(string_view tag, string_view message)
+void LogMessage(StringView tag, StringView message)
 {
     fmt::print("({}) {}\n", tag, message);
 }

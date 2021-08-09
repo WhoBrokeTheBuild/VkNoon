@@ -2,7 +2,11 @@
 #define NOON_GRAPHICS_DRIVER_HPP
 
 #include <Noon/Config.hpp>
+#include <Noon/Containers.hpp>
+#include <Noon/Math.hpp>
 #include <Noon/String.hpp>
+#include <Noon/ShaderGlobals.hpp>
+#include <Noon/ShaderTransform.hpp>
 
 #include <SDL.h>
 #include <glad/vulkan.h>
@@ -13,13 +17,7 @@ NOON_DISABLE_WARNINGS()
 
 NOON_ENABLE_WARNINGS()
 
-#include <vector>
-#include <unordered_map>
-
 namespace noon {
-
-using std::vector;
-using std::unordered_map;
 
 class NOON_API GraphicsDriver
 {
@@ -30,6 +28,18 @@ public:
     GraphicsDriver();
 
     ~GraphicsDriver();
+
+    String GetWindowTitle() const;
+
+    void SetWindowTitle(const String& title);
+
+    Vec2i GetWindowSize() const;
+
+    void SetWindowSize(const Vec2i& size);
+
+    unsigned GetBackbufferCount() const;
+
+    void GetBackbufferCount(unsigned backbufferCount);
 
     void ProcessEvents();
     
@@ -43,11 +53,11 @@ protected:
 
     bool HasDeviceExtensionAvailable(const char * extension);
 
-    virtual vector<const char *> GetRequiredLayerList();
+    virtual List<const char *> GetRequiredLayerList();
 
-    virtual vector<const char *> GetRequiredInstanceExtensionList();
+    virtual List<const char *> GetRequiredInstanceExtensionList();
 
-    virtual vector<const char *> GetRequiredDeviceExtensionList();
+    virtual List<const char *> GetRequiredDeviceExtensionList();
 
 private:
 
@@ -83,51 +93,105 @@ private:
 
     void ResetSwapChain();
 
+    void InitDepthBuffer();
+
+    void TermDepthBuffer();
+
     void InitRenderPass();
 
     void TermRenderPass();
+
+    void InitDescriptorPool();
+
+    void TermDescriptorPool();
+
+    void InitPipelineLayout();
+
+    void TermPipelineLayout();
+
+    void InitFramebuffers();
+
+    void TermFramebuffers();
 
     static GraphicsDriver * _Instance;
 
     SDL_Window * _sdlWindow;
 
-    unordered_map<string, VkLayerProperties> _vkAvailableLayerMap;
+    String _windowTitle;
 
-    unordered_map<string, VkExtensionProperties> _vkAvailableInstanceExtensionMap;
+    Vec2i _windowSize = { 640, 480 };
 
-    unordered_map<string, VkExtensionProperties> _vkAvailableDeviceExtensionMap;
+    unsigned _backbufferCount = 2;
+
+    Map<String, VkLayerProperties> _vkAvailableLayerMap;
+
+    Map<String, VkExtensionProperties> _vkAvailableInstanceExtensionMap;
+
+    Map<String, VkExtensionProperties> _vkAvailableDeviceExtensionMap;
     
-    VkInstance _vkInstance = nullptr;
+    VkInstance _vkInstance = VK_NULL_HANDLE;
 
     VkDebugUtilsMessengerCreateInfoEXT _vkDebugMessengerCreateInfo;
 
-    VkDebugUtilsMessengerEXT _vkDebugMessenger = nullptr;
+    VkDebugUtilsMessengerEXT _vkDebugMessenger = VK_NULL_HANDLE;
 
-    VkSurfaceKHR _vkSurface = nullptr;
+    VkSurfaceKHR _vkSurface = VK_NULL_HANDLE;
 
     VkPhysicalDeviceProperties _vkPhysicalDeviceProperties;
     
     VkPhysicalDeviceFeatures _vkPhysicalDeviceFeatures;
 
-    VkPhysicalDevice _vkPhysicalDevice = nullptr;
+    VkPhysicalDevice _vkPhysicalDevice = VK_NULL_HANDLE;
 
-    VkDevice _vkDevice = nullptr;
+    VkDevice _vkDevice = VK_NULL_HANDLE;
 
-    VkQueue _vkGraphicsQueue = nullptr;
+    uint32_t _vkGraphicsQueueFamilyIndex;
+
+    uint32_t _vkPresentQueueFamilyIndex;
+
+    VkQueue _vkGraphicsQueue = VK_NULL_HANDLE;
     
-    VkQueue _vkPresentQueue = nullptr;
+    VkQueue _vkPresentQueue = VK_NULL_HANDLE;
 
-    VmaAllocator _vmaAllocator;
+    VmaAllocator _vmaAllocator = VK_NULL_HANDLE;
 
-    VkSurfaceFormatKHR _vkSwapChainImageFormat;
+    VkFormat _vkSwapChainImageFormat;
+
+    VkExtent2D _vkSwapChainExtent;
+
+    VkSwapchainKHR _vkSwapChain = VK_NULL_HANDLE;
+
+    List<VkImage> _vkSwapChainImageList;
+
+    List<VkImageView> _vkSwapChainImageViewList;
+
+    VkFormat _vkDepthImageFormat;
+
+    VkImage _vkDepthImage = VK_NULL_HANDLE;
+
+    VmaAllocation _vmaDepthImageAllocation = VK_NULL_HANDLE;
+
+    VkImageView _vkDepthImageView = VK_NULL_HANDLE;
+
+    VkRenderPass _vkRenderPass = VK_NULL_HANDLE;
+
+    VkDescriptorPool _vkDescriptorPool = VK_NULL_HANDLE;
+
+    List<VkDescriptorSetLayout> _vkDescriptorSetLayoutList;
+
+    VkPipelineLayout _vkPipelineLayout = VK_NULL_HANDLE;
+
+    List<VkFramebuffer> _vkFramebufferList;
 
 }; // class GraphicsDriver
 
-string VkResultToString(VkResult vkResult);
+String VkResultToString(VkResult vkResult);
 
-string VkFormatToString(VkFormat vkFormat);
+String VkFormatToString(VkFormat vkFormat);
 
-string VkColorSpaceToString(VkColorSpaceKHR vkColorSpace);
+String VkColorSpaceToString(VkColorSpaceKHR vkColorSpace);
+
+String VkPresentModeToString(VkPresentModeKHR vkPresentMode);
 
 } // namespace noon
 

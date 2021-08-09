@@ -8,10 +8,10 @@
 
 namespace noon {
 
-using std::string;
-using std::string_view;
+using String = std::string;
+using StringView = std::string_view;
 
-inline bool StringEqualCaseInsensitive(string_view a, string_view b)
+inline bool StringEqualCaseInsensitive(StringView a, StringView b)
 {
     // TODO: UTF-8
     return std::equal(
@@ -26,10 +26,10 @@ inline bool StringEqualCaseInsensitive(string_view a, string_view b)
 #if defined(NOON_PLATFORM_WINDOWS)
 
     NOON_API
-    std::wstring ConvertUTF8ToWideString(string str);
+    std::wstring ConvertUTF8ToWideString(String str);
 
     NOON_API
-    string ConvertWideStringToUTF8(std::wstring str);
+    String ConvertWideStringToUTF8(std::wstring str);
 
 #endif // defined(NOON_PLATFORM_WINDOWS)
 

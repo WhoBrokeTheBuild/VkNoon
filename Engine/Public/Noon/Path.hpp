@@ -4,6 +4,8 @@
 #include <Noon/Config.hpp>
 #include <Noon/String.hpp>
 
+#include <fmt/format.h>
+
 namespace noon {
 
 class NOON_API Path
@@ -18,7 +20,7 @@ public:
 
     Path(const Path& rhs);
 
-    Path(const string& str);
+    Path(const String& str);
 
     Path(const char * cstr);
 
@@ -28,7 +30,7 @@ public:
     // Concatenates the paths without adding a separator
     Path& Concatenate(const Path& rhs);
 
-    inline string ToString() const {
+    inline String ToString() const {
         return _path;
     }
 
@@ -36,7 +38,7 @@ public:
         return _path.c_str();
     }
 
-    inline operator string() const {
+    inline operator String() const {
         return _path;
     }
 
@@ -68,7 +70,7 @@ public:
 
     inline Path GetRootDirectory() const {
         if (HasRootDirectory()) {
-            return string(1, Slash);
+            return String(1, Slash);
         }
         return Path();
     }
@@ -84,7 +86,7 @@ public:
     inline Path GetParentPath() const {
         size_t pivot = _path.find_last_of(Slash);
         return (
-            pivot <= GetRootNameLength() || pivot == string::npos
+            pivot <= GetRootNameLength() || pivot == String::npos
             ? _path
             : _path.substr(0, pivot)
         );
@@ -93,28 +95,28 @@ public:
     inline Path GetFilename() const {
         size_t pivot = _path.find_last_of(Slash);
         return (
-            pivot <= GetRootNameLength() || pivot == string::npos
+            pivot <= GetRootNameLength() || pivot == String::npos
             ? _path
             : _path.substr(pivot + 1)
         );
     }
 
     inline Path GetStem() const {
-        string filename = GetFilename();
+        String filename = GetFilename();
         size_t pivot = filename.find_last_of('.');
         return (
-            pivot == 0 || pivot == string::npos
+            pivot == 0 || pivot == String::npos
             ? filename
             : filename.substr(0, pivot)
         );
     }
 
     inline Path GetExtension() const {
-        string filename = GetFilename();
+        String filename = GetFilename();
         size_t pivot = filename.find_last_of('.');
         return (
-            pivot == 0 || pivot == string::npos
-            ? string()
+            pivot == 0 || pivot == String::npos
+            ? String()
             : filename.substr(pivot + 1)
         );
     }
@@ -162,7 +164,7 @@ private:
 
     size_t GetRootNameLength() const;
 
-    string _path;
+    String _path;
 
 }; // class Path
 
@@ -170,5 +172,14 @@ NOON_API
 Path GetCurrentPath();
 
 } // namespace noon
+
+template<>
+struct fmt::formatter<noon::Path> : public fmt::formatter<std::string_view>
+{
+    template <typename FormatContext>
+    auto format(const noon::Path& path, FormatContext& ctx) {
+        return formatter<std::string_view>::format(std::string_view(path.ToString()), ctx);
+    }
+};
 
 #endif // NOON_PATH_HPP

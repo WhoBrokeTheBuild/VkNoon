@@ -96,7 +96,10 @@ if os.path.isdir('.vscode'):
                 'value': assetPath
             }
         ],
-        'console': 'internalConsole'
+        'console': 'internalConsole',
+        'logging': {
+            'moduleLoad': False
+        }
     }
     
     if isWindows:

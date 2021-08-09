@@ -65,6 +65,7 @@ TARGET_LINK_LIBRARIES(
         SDL2::SDL2
         SDL2::SDL2main
         fmt::fmt
+        glm::glm
 )
 
 TARGET_INCLUDE_DIRECTORIES(

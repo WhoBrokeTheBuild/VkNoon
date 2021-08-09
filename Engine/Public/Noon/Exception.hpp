@@ -14,12 +14,12 @@ class NOON_API Exception : public std::exception
 {
 public:
 
-    Exception(string_view message) noexcept
+    Exception(StringView message) noexcept
         : _message(message)
     { }
 
     template <class... Args>
-    Exception(string_view format, const Args&... args) noexcept
+    Exception(StringView format, const Args&... args) noexcept
         : _message(fmt::format(format, args...))
     { }
 
@@ -29,7 +29,7 @@ public:
 
 private:
 
-    string _message;
+    String _message;
 
 }; // class Exception
 

@@ -23,7 +23,7 @@ public:
 
     virtual Version GetVersion();
 
-    virtual string GetName();
+    virtual String GetName();
 
     float GetTargetFPS() const {
         return _targetFPS;
@@ -36,6 +36,10 @@ public:
     GraphicsDriver * GetGraphicsDriver() const {
         return _graphicsDriver;
     }
+
+    void Init();
+
+    void Term();
 
     void Run();
 

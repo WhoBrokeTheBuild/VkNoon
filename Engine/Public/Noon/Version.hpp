@@ -4,6 +4,8 @@
 #include <Noon/Config.hpp>
 #include <Noon/String.hpp>
 
+#include <fmt/format.h>
+
 #include <regex>
 #include <tuple>
 
@@ -21,7 +23,7 @@ struct NOON_API Version
         , Patch(patch)
     { }
 
-    Version(const string& str)
+    Version(const String& str)
     {
         FromString(str);
     }
@@ -72,21 +74,18 @@ struct NOON_API Version
         return (res == 0 || res == -1);
     }
 
-    inline string ToString() const
+    inline String ToString() const
     {
-        return std::to_string(Major) + 
-            "." + 
-            std::to_string(Minor) + 
-            "." + 
-            std::to_string(Patch);
+        return fmt::format("{}.{}.{}", 
+            Major, Minor, Patch);
     }
 
-    inline operator string() const
+    inline operator String() const
     {
         return ToString();
     }
 
-    inline void FromString(const string& string)
+    inline void FromString(const String& string)
     {
         std::smatch match;
         std::regex regex("^.*?([0-9])+\\.([0-9]+)\\.([0-9]+).*");
@@ -125,5 +124,14 @@ struct NOON_API Version
 }; // struct Version
 
 } // namespace noon
+
+template<>
+struct fmt::formatter<noon::Version> : public fmt::formatter<std::string_view>
+{
+    template <typename FormatContext>
+    auto format(const noon::Version& version, FormatContext& ctx) {
+        return formatter<std::string_view>::format(std::string_view(version.ToString()), ctx);
+    }
+};
 
 #endif // NOON_VERSION_HPP
