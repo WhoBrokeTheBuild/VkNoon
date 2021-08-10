@@ -21,6 +21,10 @@ public:
 
     virtual ~Application();
 
+    virtual void Init();
+
+    virtual void Term();
+
     virtual Version GetVersion();
 
     virtual String GetName();
@@ -36,10 +40,6 @@ public:
     GraphicsDriver * GetGraphicsDriver() const {
         return _graphicsDriver;
     }
-
-    void Init();
-
-    void Term();
 
     void Run();
 

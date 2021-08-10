@@ -1,10 +1,5 @@
 #include "HelloWorldApplication.hpp"
 
-HelloWorldApplication::HelloWorldApplication()
-{
-    GetGraphicsDriver()->SetWindowSize({ 1024, 768 });
-}
-
 Version HelloWorldApplication::GetVersion()
 {
     return Version(1, 0, 0);
@@ -13,4 +8,11 @@ Version HelloWorldApplication::GetVersion()
 String HelloWorldApplication::GetName()
 {
     return "HelloWorld";
+}
+
+void HelloWorldApplication::Init()
+{
+    Application::Init();
+
+    GetGraphicsDriver()->SetWindowSize({ 1024, 768 });
 }

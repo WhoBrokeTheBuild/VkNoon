@@ -13,7 +13,7 @@ MACRO(GET_RUNTIME_DIR _target _out_var)
         GET_TARGET_PROPERTY(_location ${_target} IMPORTED_LOCATION)
         GET_FILENAME_COMPONENT(${_out_var} ${_location} DIRECTORY)
 
-        IF (${_out_var} STREQUAL "")
+        IF (${_out_var} STREQUAL "" AND CMAKE_BUILD_TYPE)
             STRING(TOUPPER ${CMAKE_BUILD_TYPE} _type)
             GET_TARGET_PROPERTY(_location ${_target} IMPORTED_LOCATION_${_type})
             GET_FILENAME_COMPONENT(${_out_var} ${_location} DIRECTORY)

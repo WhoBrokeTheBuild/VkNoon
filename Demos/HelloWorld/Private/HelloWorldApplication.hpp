@@ -10,11 +10,15 @@ class HelloWorldApplication : public noon::Application
 {
 public:
 
-    HelloWorldApplication();
+    HelloWorldApplication() = default;
+
+    ~HelloWorldApplication() = default;
 
     Version GetVersion() override;
 
     String GetName() override;
+
+    void Init() override;
 
 };
 

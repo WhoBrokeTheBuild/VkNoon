@@ -27,25 +27,44 @@ public:
 
     GraphicsDriver();
 
-    ~GraphicsDriver();
+    virtual ~GraphicsDriver();
 
-    String GetWindowTitle() const;
+    inline String GetWindowTitle() const {
+        return _windowTitle;
+    }
 
     void SetWindowTitle(const String& title);
 
-    Vec2i GetWindowSize() const;
+    inline Vec2i GetWindowSize() const {
+        return _windowSize;
+    }
 
     void SetWindowSize(const Vec2i& size);
 
-    unsigned GetBackbufferCount() const;
+    inline unsigned GetBackbufferCount() const {
+        return _backbufferCount;
+    }
 
-    void GetBackbufferCount(unsigned backbufferCount);
+    void SetBackbufferCount(unsigned backbufferCount);
+
+    inline VkDevice GetDevice() const {
+        return _vkDevice;
+    }
+
+    inline VmaAllocator GetAllocator() const {
+        return _vmaAllocator;
+    }
 
     void ProcessEvents();
     
     void Render();
 
+    // TODO: Move
+    void CopyBuffer(VkBuffer srcBuffer, VkBuffer dstBuffer, VkDeviceSize size);
+
 protected:
+
+    void UpdateShaderGlobals();
 
     bool HasLayerAvailable(const char * layer);
 
@@ -58,8 +77,6 @@ protected:
     virtual List<const char *> GetRequiredInstanceExtensionList();
 
     virtual List<const char *> GetRequiredDeviceExtensionList();
-
-private:
 
     void InitWindow();
 
@@ -87,6 +104,10 @@ private:
 
     void TermAllocator();
 
+    void InitSyncObjects();
+
+    void TermSyncObjects();
+
     void InitSwapChain();
 
     void TermSwapChain();
@@ -113,6 +134,12 @@ private:
 
     void TermFramebuffers();
 
+    void InitCommandBuffers();
+
+    void TermCommandBuffers();
+
+    void FillCommandBuffers();
+
     static GraphicsDriver * _Instance;
 
     SDL_Window * _sdlWindow;
@@ -122,6 +149,8 @@ private:
     Vec2i _windowSize = { 640, 480 };
 
     unsigned _backbufferCount = 2;
+
+    unsigned _backbufferIndex = 0;
 
     Map<String, VkLayerProperties> _vkAvailableLayerMap;
 
@@ -182,6 +211,20 @@ private:
     VkPipelineLayout _vkPipelineLayout = VK_NULL_HANDLE;
 
     List<VkFramebuffer> _vkFramebufferList;
+
+    VkCommandPool _vkCommandPool = VK_NULL_HANDLE;
+
+    List<VkCommandBuffer> _vkCommandBufferList;
+
+    List<VkSemaphore> _vkImageAvailableSemaphoreList;
+
+    List<VkSemaphore> _vkRenderingFinishedSemaphoreList;
+
+    List<VkFence> _vkInFlightFenceList;
+
+    List<VkFence> _vkImageInFlightList;
+
+    List<VkBuffer> _vkUniformBufferList;
 
 }; // class GraphicsDriver
 

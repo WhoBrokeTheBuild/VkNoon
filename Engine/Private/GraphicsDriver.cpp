@@ -28,22 +28,21 @@ GraphicsDriver::GraphicsDriver()
     InitDevice();
     InitAllocator();
     InitSwapChain();
+    InitSyncObjects();
 }
 
 NOON_API
 GraphicsDriver::~GraphicsDriver()
 {
+    vkDeviceWaitIdle(_vkDevice);
+
+    TermSyncObjects();
     TermSwapChain();
     TermAllocator();
     TermDevice();
     TermSurface();
     TermInstance();
     TermWindow();
-}
-
-String GraphicsDriver::GetWindowTitle() const
-{
-    return _windowTitle;
 }
 
 void GraphicsDriver::SetWindowTitle(const String& title)
@@ -53,11 +52,6 @@ void GraphicsDriver::SetWindowTitle(const String& title)
     if (_sdlWindow) {
         SDL_SetWindowTitle(_sdlWindow, _windowTitle.c_str());
     }
-}
-
-Vec2i GraphicsDriver::GetWindowSize() const
-{
-    return _windowSize;
 }
 
 void GraphicsDriver::SetWindowSize(const Vec2i& size)
@@ -72,12 +66,7 @@ void GraphicsDriver::SetWindowSize(const Vec2i& size)
     }
 }
 
-unsigned GraphicsDriver::GetBackbufferCount() const
-{
-    return _backbufferCount;
-}
-
-void GraphicsDriver::GetBackbufferCount(unsigned backbufferCount)
+void GraphicsDriver::SetBackbufferCount(unsigned backbufferCount)
 {
     _backbufferCount = backbufferCount;
     
@@ -92,11 +81,203 @@ void GraphicsDriver::ProcessEvents()
         if (event.type == SDL_QUIT) {
             Application::GetInstance()->Stop();
         }
+
+        if (event.type == SDL_WINDOWEVENT) {
+            switch (event.window.event) {
+                case SDL_WINDOWEVENT_RESIZED:
+                    _windowSize.x = event.window.data1;
+                    _windowSize.y = event.window.data2;
+
+                    ResetSwapChain();
+                    break;
+            }
+        }
     }
 }
 
 void GraphicsDriver::Render()
 {
+    VkResult vkResult;
+
+    UpdateShaderGlobals();
+
+    vmaSetCurrentFrameIndex(_vmaAllocator, _backbufferIndex);
+
+    vkWaitForFences(
+        _vkDevice,
+        1,
+        &_vkInFlightFenceList[_backbufferIndex],
+        VK_TRUE,
+        UINT64_MAX);
+
+    uint32_t imageIndex = 0;
+
+    vkResult = vkAcquireNextImageKHR(
+        _vkDevice,
+        _vkSwapChain,
+        UINT64_MAX,
+        _vkImageAvailableSemaphoreList[_backbufferIndex],
+        nullptr,
+        &imageIndex);
+    
+    if (vkResult == VK_ERROR_OUT_OF_DATE_KHR) {
+        ResetSwapChain();
+    }
+    else if (vkResult != VK_SUCCESS && vkResult != VK_SUBOPTIMAL_KHR) {
+        throw Exception("vkAcquireNextImageKHR() failed");
+    }
+
+    if (_vkImageInFlightList[imageIndex] != VK_NULL_HANDLE) {
+        vkWaitForFences(
+            _vkDevice,
+            1,
+            &_vkImageInFlightList[imageIndex],
+            VK_TRUE,
+            UINT64_MAX);
+    }
+
+    _vkImageInFlightList[imageIndex] = _vkInFlightFenceList[_backbufferIndex];
+
+    // "Present Complete"
+    Array<VkSemaphore, 1> waitSemaphoreList = {
+        _vkImageAvailableSemaphoreList[_backbufferIndex],
+    };
+
+    Array<VkPipelineStageFlags, 1> waitStageList = {
+        VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT,
+    };
+
+    // "Render Complete"
+    Array<VkSemaphore, 1> signalSemaphoreList = {
+        _vkRenderingFinishedSemaphoreList[_backbufferIndex],
+    };
+
+    VkSubmitInfo submitInfo = {
+        .sType = VK_STRUCTURE_TYPE_SUBMIT_INFO,
+        .pNext = nullptr,
+        .waitSemaphoreCount = static_cast<uint32_t>(waitSemaphoreList.size()),
+        .pWaitSemaphores = waitSemaphoreList.data(),
+        .pWaitDstStageMask = waitStageList.data(),
+        .commandBufferCount = 1,
+        .pCommandBuffers = &_vkCommandBufferList[imageIndex],
+        .signalSemaphoreCount = static_cast<uint32_t>(signalSemaphoreList.size()),
+        .pSignalSemaphores = signalSemaphoreList.data(),
+    };
+
+    vkResetFences(_vkDevice, 1, &_vkInFlightFenceList[_backbufferIndex]);
+
+    vkResult = vkQueueSubmit(
+        _vkGraphicsQueue,
+        1,
+        &submitInfo,
+        _vkInFlightFenceList[_backbufferIndex]);
+    
+    if (vkResult != VK_SUCCESS) {
+        throw Exception("vkQueueSubmit() failed");
+    }
+
+    VkPresentInfoKHR presentInfo = {
+        .sType = VK_STRUCTURE_TYPE_PRESENT_INFO_KHR,
+        .pNext = nullptr,
+        .waitSemaphoreCount = static_cast<uint32_t>(signalSemaphoreList.size()),
+        .pWaitSemaphores = signalSemaphoreList.data(),
+        .swapchainCount = 1,
+        .pSwapchains = &_vkSwapChain,
+        .pImageIndices = &imageIndex,
+    };
+
+    vkResult = vkQueuePresentKHR(_vkPresentQueue, &presentInfo);
+    if (vkResult == VK_ERROR_OUT_OF_DATE_KHR || vkResult == VK_SUBOPTIMAL_KHR) {
+        ResetSwapChain();
+    }
+    else if (vkResult != VK_SUCCESS) {
+        throw Exception("vkQueuePresentKHR() failed");
+    }
+
+    _backbufferIndex = (_backbufferIndex + 1) % _backbufferCount;
+}
+
+void GraphicsDriver::CopyBuffer(VkBuffer srcBuffer, VkBuffer dstBuffer, VkDeviceSize size)
+{
+    VkResult vkResult;
+
+    VkCommandBufferAllocateInfo commandBufferAllocateInfo = {
+        .sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_ALLOCATE_INFO,
+        .pNext = nullptr,
+        .commandPool = _vkCommandPool,
+        .level = VK_COMMAND_BUFFER_LEVEL_PRIMARY,
+        .commandBufferCount = 1,
+    };
+
+    VkCommandBuffer commandBuffer = VK_NULL_HANDLE;
+
+    vkResult = vkAllocateCommandBuffers(
+        _vkDevice,
+        &commandBufferAllocateInfo,
+        &commandBuffer);
+
+    if (vkResult != VK_SUCCESS) {
+        throw Exception("vkAllocateCommandBuffers() failed");
+    }
+
+    VkCommandBufferBeginInfo commandBufferBeginInfo = {
+        .sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_BEGIN_INFO,
+        .pNext = nullptr,
+        .flags = VK_COMMAND_BUFFER_USAGE_ONE_TIME_SUBMIT_BIT,
+    };
+
+    vkResult = vkBeginCommandBuffer(commandBuffer, &commandBufferBeginInfo);
+    if (vkResult != VK_SUCCESS) {
+        throw Exception("vkBeginCommandBuffer() failed");
+    }
+
+    VkBufferCopy bufferCopyRegion = {
+        .srcOffset = 0,
+        .dstOffset = 0,
+        .size = size,
+    };
+
+    vkCmdCopyBuffer(
+        commandBuffer,
+        srcBuffer,
+        dstBuffer,
+        1,
+        &bufferCopyRegion);
+
+    vkResult = vkEndCommandBuffer(commandBuffer);
+    if (vkResult != VK_SUCCESS) {
+        throw Exception("vkEndCommandBuffer() failed");
+    }
+
+    VkSubmitInfo submitInfo = {
+        .sType = VK_STRUCTURE_TYPE_SUBMIT_INFO,
+        .pNext = nullptr,
+        .commandBufferCount = 1,
+        .pCommandBuffers = &commandBuffer,
+    };
+
+    vkResult = vkQueueSubmit(
+        _vkGraphicsQueue, 
+        1,
+        &submitInfo,
+        nullptr);
+
+    if (vkResult != VK_SUCCESS) {
+        throw Exception("vkQueueSubmit() failed");
+    }
+
+    vkQueueWaitIdle(_vkGraphicsQueue);
+
+    vkFreeCommandBuffers(
+        _vkDevice,
+        _vkCommandPool,
+        1,
+        &commandBuffer);
+}
+
+void GraphicsDriver::UpdateShaderGlobals()
+{
+
 }
 
 bool GraphicsDriver::HasLayerAvailable(const char * layer)
@@ -749,6 +930,82 @@ void GraphicsDriver::TermAllocator()
     }
 }
 
+void GraphicsDriver::InitSyncObjects()
+{
+    VkResult vkResult;
+    
+    _vkImageAvailableSemaphoreList.resize(_backbufferCount, VK_NULL_HANDLE);
+    _vkRenderingFinishedSemaphoreList.resize(_backbufferCount, VK_NULL_HANDLE);
+    _vkInFlightFenceList.resize(_backbufferCount, VK_NULL_HANDLE);
+    _vkImageInFlightList.resize(_backbufferCount, VK_NULL_HANDLE);
+
+    VkSemaphoreCreateInfo semaphoreCreateInfo = {
+        .sType = VK_STRUCTURE_TYPE_SEMAPHORE_CREATE_INFO,
+        .pNext = nullptr,
+        .flags = 0,
+    };
+
+    VkFenceCreateInfo fenceCreateInfo = {
+        .sType = VK_STRUCTURE_TYPE_FENCE_CREATE_INFO,
+        .pNext = nullptr,
+        .flags = VK_FENCE_CREATE_SIGNALED_BIT,
+    };
+
+    for (unsigned i = 0; i < _backbufferCount; ++i) {
+        vkResult = vkCreateSemaphore(
+            _vkDevice,
+            &semaphoreCreateInfo,
+            nullptr,
+            &_vkImageAvailableSemaphoreList[i]);
+
+        if (vkResult != VK_SUCCESS) {
+            throw Exception("vkCreateSemaphore() failed");
+        }
+
+        vkResult = vkCreateSemaphore(
+            _vkDevice,
+            &semaphoreCreateInfo,
+            nullptr,
+            &_vkRenderingFinishedSemaphoreList[i]);
+            
+        if (vkResult != VK_SUCCESS) {
+            throw Exception("vkCreateSemaphore() failed");
+        }
+
+        vkResult = vkCreateFence(
+            _vkDevice,
+            &fenceCreateInfo,
+            nullptr,
+            &_vkInFlightFenceList[i]);
+            
+        if (vkResult != VK_SUCCESS) {
+            throw Exception("vkCreateFence() failed");
+        }
+    }
+}
+
+void GraphicsDriver::TermSyncObjects()
+{
+    for (auto& fence : _vkImageInFlightList) {
+        fence = VK_NULL_HANDLE;
+    }
+
+    for (auto& fence : _vkInFlightFenceList) {
+        vkDestroyFence(_vkDevice, fence, nullptr);
+        fence = nullptr;
+    }
+
+    for (auto& semaphore : _vkRenderingFinishedSemaphoreList) {
+        vkDestroySemaphore(_vkDevice, semaphore, nullptr);
+        semaphore = nullptr;
+    }
+
+    for (auto& semaphore : _vkImageAvailableSemaphoreList) {
+        vkDestroySemaphore(_vkDevice, semaphore, nullptr);
+        semaphore = nullptr;
+    }
+}
+
 void GraphicsDriver::InitSwapChain()
 {
     VkResult vkResult;
@@ -934,7 +1191,7 @@ void GraphicsDriver::InitSwapChain()
         _vkSwapChainImageList.data());
 
     _vkSwapChainImageViewList.resize(imageCount, VK_NULL_HANDLE);
-    for (size_t i = 0; i < _backbufferCount; ++i) {
+    for (unsigned i = 0; i < _backbufferCount; ++i) {
         if (_vkSwapChainImageViewList[i]) {
             vkDestroyImageView(_vkDevice, _vkSwapChainImageViewList[i], nullptr);
             _vkSwapChainImageViewList[i] = VK_NULL_HANDLE;
@@ -969,11 +1226,12 @@ void GraphicsDriver::InitSwapChain()
     InitDescriptorPool();
     InitPipelineLayout();
     InitFramebuffers();
-    
+    InitCommandBuffers();
 }
 
 void GraphicsDriver::TermSwapChain()
 {
+    TermCommandBuffers();
     TermFramebuffers();
     TermPipelineLayout();
     TermDescriptorPool();
@@ -1235,7 +1493,7 @@ void GraphicsDriver::InitDescriptorPool()
         .sType = VK_STRUCTURE_TYPE_DESCRIPTOR_POOL_CREATE_INFO,
         .pNext = nullptr,
         .flags = 0,
-        .maxSets = static_cast<uint32_t>(_backbufferCount),
+        .maxSets = _backbufferCount,
         .poolSizeCount = static_cast<uint32_t>(descriptorPoolSizeList.size()),
         .pPoolSizes = descriptorPoolSizeList.data(),
     };
@@ -1383,6 +1641,130 @@ void GraphicsDriver::TermFramebuffers()
         if (framebuffer) {
             vkDestroyFramebuffer(_vkDevice, framebuffer, nullptr);
             framebuffer = VK_NULL_HANDLE;
+        }
+    }
+}
+
+void GraphicsDriver::InitCommandBuffers()
+{
+    VkResult vkResult;
+
+    TermCommandBuffers();
+
+    VkCommandPoolCreateInfo commandPoolCreateInfo = {
+        .sType = VK_STRUCTURE_TYPE_COMMAND_POOL_CREATE_INFO,
+        .pNext = nullptr,
+        .flags = 0,
+        .queueFamilyIndex = _vkGraphicsQueueFamilyIndex,
+    };
+
+    vkResult = vkCreateCommandPool(
+        _vkDevice,
+        &commandPoolCreateInfo,
+        nullptr,
+        &_vkCommandPool);
+
+    if (vkResult != VK_SUCCESS) {
+        throw Exception("vkCreateCommandPool() failed");
+    }
+
+    VkCommandBufferAllocateInfo commandBufferAllocateInfo = {
+        .sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_ALLOCATE_INFO,
+        .pNext = nullptr,
+        .commandPool = _vkCommandPool,
+        .level = VK_COMMAND_BUFFER_LEVEL_PRIMARY,
+        .commandBufferCount = _backbufferCount,
+    };
+
+    _vkCommandBufferList.resize(_backbufferCount, VK_NULL_HANDLE);
+
+    vkResult = vkAllocateCommandBuffers(
+        _vkDevice,
+        &commandBufferAllocateInfo,
+        _vkCommandBufferList.data());
+
+    if (vkResult != VK_SUCCESS) {
+        throw Exception("vkAllocateCommandBuffers() failed");
+    }
+
+    FillCommandBuffers();
+}
+
+void GraphicsDriver::TermCommandBuffers()
+{
+    if (!_vkCommandBufferList.empty()) {
+        vkFreeCommandBuffers(
+            _vkDevice,
+            _vkCommandPool,
+            static_cast<uint32_t>(_vkCommandBufferList.size()),
+            _vkCommandBufferList.data());
+        
+        for (auto& commandBuffer : _vkCommandBufferList) {
+            commandBuffer = VK_NULL_HANDLE;
+        }
+    }
+    
+    if (_vkCommandPool) {
+        vkDestroyCommandPool(_vkDevice, _vkCommandPool, nullptr);
+        _vkCommandPool = VK_NULL_HANDLE;
+    }
+}
+
+void GraphicsDriver::FillCommandBuffers()
+{
+    VkResult vkResult;
+
+    const Vec4& color = { 0.0f, 0.0f, 0.0f, 1.0f };
+    std::array<VkClearValue, 2> clearValues = {
+        VkClearValue {
+            .color {
+                .float32 = { color.r, color.g, color.b, color.a },
+            },
+        },
+        VkClearValue {
+            .depthStencil {
+                .depth = 1.0f,
+                .stencil = 0,
+            }
+        },
+    };
+
+    for (unsigned i = 0; i < _backbufferCount; ++i) {
+        VkCommandBufferBeginInfo commandBufferBeginInfo = {
+            .sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_BEGIN_INFO,
+            .pNext = nullptr,
+            .flags = 0,
+        };
+
+        vkResult = vkBeginCommandBuffer(_vkCommandBufferList[i], &commandBufferBeginInfo);
+        if (vkResult != VK_SUCCESS) {
+            throw Exception("vkBeginCommandBuffer() failed");
+        }
+
+        VkRenderPassBeginInfo renderPassBeginInfo = {
+            .sType = VK_STRUCTURE_TYPE_RENDER_PASS_BEGIN_INFO,
+            .renderPass = _vkRenderPass,
+            .framebuffer = _vkFramebufferList[i],
+            .renderArea = {
+                .offset = { 0, 0 },
+                .extent = _vkSwapChainExtent,
+            },
+            .clearValueCount = static_cast<uint32_t>(clearValues.size()),
+            .pClearValues = clearValues.data(),
+        };
+
+        vkCmdBeginRenderPass(
+            _vkCommandBufferList[i],
+            &renderPassBeginInfo,
+            VK_SUBPASS_CONTENTS_INLINE);
+
+        
+
+        vkCmdEndRenderPass(_vkCommandBufferList[i]);
+
+        vkResult = vkEndCommandBuffer(_vkCommandBufferList[i]);
+        if (vkResult != VK_SUCCESS) {
+            throw Exception("vkEndCommandBuffer() failed");
         }
     }
 }

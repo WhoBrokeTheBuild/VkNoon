@@ -1,4 +1,5 @@
 #include <Noon/Application.hpp>
+#include <Noon/Log.hpp>
 
 #include <chrono>
 #include <thread>
@@ -11,16 +12,24 @@ NOON_API
 Application::Application()
 {
     _Instance = this;
-
-    _graphicsDriver = new GraphicsDriver;
 }
 
 NOON_API
 Application::~Application()
 {
-    delete _graphicsDriver;
-
     _Instance = nullptr;
+}
+
+NOON_API
+void Application::Init()
+{
+    _graphicsDriver = new GraphicsDriver;
+}
+
+NOON_API
+void Application::Term()
+{
+    delete _graphicsDriver;
 }
 
 NOON_API
@@ -39,6 +48,8 @@ NOON_API
 void Application::Run()
 {
     using namespace std::chrono;
+
+    Init();
 
     auto startTime = high_resolution_clock::now();
     auto previousTime = startTime;
@@ -67,6 +78,8 @@ void Application::Run()
             std::this_thread::sleep_for(timeToSleep);
         }
     }
+
+    Term();
 }
 
 void Application::Stop()
